@@ -1,0 +1,14 @@
+-- Copyright (c) 2015 by Geekscape Pty. Ltd.  Licence LGPL V3.
+
+local module = {}
+
+module.STA = {}
+module.STA.SSID = "YOUR_AP_SSID"
+module.STA.KEY = "YOUR_AP_KEY"
+
+module.MQTT = {}
+module.MQTT.HOST = {}
+module.MQTT.HOST.IP = "192.168.0.1"
+module.MQTT.HOST.PORT = 4000
+
+return module
