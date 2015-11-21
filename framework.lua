@@ -65,26 +65,35 @@ module.http_setup = function()
     app.http = net.createServer(net.TCP, 30) 
     app.http:listen(80, function(conn) 
         conn:on("receive", function(client, headers)
-            local response = "";
+            local response = module.create_http_response(404);
             
             -- Parse out the request method, path, and variables based on the HTTP header
             local _, _, method, path, vars = string.find(headers, "([A-Z]+) (.+)?(.+) HTTP");
 
-            if(method == nil)then 
-                _, _, method, path = find(headers, "([A-Z]+) (.+) HTTP"); 
+            if (method == nil) then 
+                _, _, method, path = string.find(headers, "([A-Z]+) (.+) HTTP"); 
             end
             
             -- Parse vars into an key/value array
             local _GET = {}
-            if (vars ~= nil)then 
+            if (vars ~= nil) then 
                 for k, v in string.gmatch(vars, "(%w+)=(%w+)&*") do 
                     _GET[k] = v 
                 end 
             end
 
-            print_r(method)
-            print_r(path)
-            print_r(_GET)
+            print("HTTP Request ".. method .. " : " .. path)
+            -- This is where the framework dictates what happens next. Here we will take the http
+            -- request that was made and turn it into a token which represents the method were
+            -- Calling. Functions should be named like this: http_{method}_{path}[_path...]
+            local userFunc = "http_" .. method .. path
+            userFunc = string.gsub(userFunc, "/", "_")
+            userFunc = string.lower(userFunc)
+            if(_G["app"][userFunc]) then
+              response = _G["app"][userFunc]()
+            else
+              response = "No Such Function"
+            end
 
             client:send(response);
             client:close();
@@ -94,6 +103,10 @@ module.http_setup = function()
         end)
     end)
 
+end
+
+module.create_http_response = function(status)
+  return "HTTP/4.0 404 Not Found"
 end
 
 
