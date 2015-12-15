@@ -1,0 +1,21 @@
+
+
+
+
+            print("HTTP Request ".. method .. " : " .. path)
+            -- This is where the framework dictates what happens next. Here we will take the http
+            -- request that was made and turn it into a token which represents the method were
+            -- Calling. Functions should be named like this: http_{method}_{path}...
+            local userFunc = "http_" .. method .. path
+            userFunc = string.gsub(userFunc, "/", "_")
+            userFunc = string.lower(userFunc)
+            if(_G["app"][userFunc]) then
+              response = _G["app"][userFunc]()
+            else
+              response = "No Such Function"
+            end
+            print("Sending:" .. response)
+            conn:send("<b>"..response.."</b>")
+            conn:close()
+            collectgarbage()
+            ]]--
