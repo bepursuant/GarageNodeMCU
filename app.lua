@@ -12,7 +12,7 @@ module.start = function()
 
   if gc.RELAY and gc.OPEN and gc.CLOSED and gc.DELAY then
 
-    print("GarageNodeMCU Configuration Found")
+    print("Configuring GarageNodeMCU...")
 
     -- Setup the GPIO pins for sensing and interacting with the garage door opener
     -- and the door itself. The RELAY pin is what triggers the opener to toggle
@@ -41,19 +41,19 @@ end
 -- Because we cannot connect two interrupts to a pin (one for up and one for down)
 -- we have to do our dispatching in a status change function. Lame, but it works
 module.onOpenChange = function(type)
-  if (type == "up") then
+  if (type == 1) then
     module.closing()
   end
-  if (type == "down") then
+  if (type == 0) then
     module.open()
   end
 end
 
 module.onCloseChange = function(type)
-  if (type == "up") then
+  if (type == 1) then
     module.opening()
   end
-  if (type == "down") then
+  if (type == 0) then
     module.closed()
   end
 end

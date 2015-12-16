@@ -1,27 +1,28 @@
 -- Copyright (c) 2015 by Geekscape Pty. Ltd.  Licence LGPL V3.
 function print_r ( t ) 
-    local print_r_cache={}
-    local function sub_print_r(t,indent)
-        if (print_r_cache[tostring(t)]) then
-            print(indent.."*"..tostring(t))
-        else
-            print_r_cache[tostring(t)]=true
-            if (type(t)=="table") then
-                for pos,val in pairs(t) do
-                    if (type(val)=="table") then
-                        print(indent.."["..pos.."] => "..tostring(t).." {")
-                        sub_print_r(val,indent..string.rep(" ",string.len(pos)+8))
-                        print(indent..string.rep(" ",string.len(pos)+6).."}")
-                    else
-                        print(indent.."["..pos.."] => "..tostring(val))
-                    end
-                end
-            else
-                print(indent..tostring(t))
-            end
-        end
-    end
-    sub_print_r(t,"  ")
+	local print_r_cache={}
+  local function sub_print_r(t,indent)
+      if (print_r_cache[tostring(t)]) then
+          print(indent.."*"..tostring(t))
+      else
+          print_r_cache[tostring(t)]=true
+          if (type(t)=="table") then
+              for pos,val in pairs(t) do
+                  if (type(val)=="table") then
+                      print(indent.."["..pos.."] => "..tostring(t).." {")
+                      sub_print_r(val,indent..string.rep(" ",string.len(pos)+8))
+                      print(indent..string.rep(" ",string.len(pos)+6).."}")
+                  else
+                      print(indent.."["..pos.."] => "..tostring(val))
+                  end
+              end
+          else
+              print(indent..tostring(t))
+          end
+      end
+  end
+  sub_print_r(t,"  ")
+  collectgarbage()
 end
 
 local module = {}
@@ -41,6 +42,7 @@ module.wifi_connect = function(aps)
       print("Wifi STA Connected as " .. wifi.sta.getip())
     end 
   end)
+  collectgarbage()
 end
 
 
@@ -65,13 +67,40 @@ module.http_setup = function()
     module.http:listen(80, function(conn) 
         conn:on("receive", function(client, headers)
 
-          local req = dofile("httpserver-request.lc")(payload)
+            local response = module.create_http_response(404);
+            
+            -- Parse out the request method, path, and variables based on the HTTP header
+            local _, _, method, path, vars = string.find(headers, "([A-Z]+) (.+)?(.+) HTTP");
 
+            if (method == nil) then 
+                _, _, method, path = string.find(headers, "([A-Z]+) (.+) HTTP"); 
+            end
+            
+            -- Parse vars into an key/value array
+            local _GET = {}
+            if (vars ~= nil) then 
+                for k, v in string.gmatch(vars, "(%w+)=(%w+)&*") do 
+                    _GET[k] = v 
+                end 
+            end
 
+            print("HTTP ".. method .. " : " .. path)
+            -- This is where the framework dictates what happens next. Here we will take the http
+            -- request that was made and turn it into a token which represents the method were
+            -- Calling. Functions should be named like this: http_{method}_{path}[_path...]
+            local userFunc = "http_" .. method .. path
+            userFunc = string.gsub(userFunc, "/", "_")
+            userFunc = string.lower(userFunc)
+            if(_G["app"][userFunc]) then
+              response = _G["app"][userFunc]()
+            else
+              response = "No Such Function"
+            end
 
-        
-          conn:send("<H1>asdf</h1>\n")
-          conn:close()         
+            client:send(response);
+            client:close();
+            collectgarbage();
+
         end)
     end)
 
