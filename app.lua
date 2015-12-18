@@ -164,6 +164,12 @@ module.http_get_api_close = function()
   end  
 end
 
+module.http_get_ = function()
+
+  return "<a href='/api/open'>Open</a> <a href='/api/close'>Close</a> <a href='/api/toggle'>Toggle</a> <a href='/api/status'>Status</a>"
+
+end
+
 -- HTTP GET /info
 module.http_get_info = function()
   -- return module info
